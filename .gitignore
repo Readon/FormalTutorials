@@ -12,6 +12,7 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
+project/**/*.sbt
 
 # Scala-IDE specific
 .scala_dependencies
@@ -22,6 +23,7 @@ out
 
 # Metals
 .metals
+.bloop
 
 # Eclipse
 bin/
@@ -42,3 +44,4 @@ bin/
 simWorkspace/
 tmp/
 null
+
