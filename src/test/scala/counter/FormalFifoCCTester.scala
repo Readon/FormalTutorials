@@ -33,15 +33,18 @@ object GlobalClock {
 
 class FormalFifoCCTester extends SpinalFormalFunSuite {
   test("fifo-verify all") {
-    val initialCycles = 2
-    val inOutDelay = 2
-    val coverCycles = 50
+    val back2backCycles = 2
+
     val fifoDepth = 4
+    val proveCycles = 8
+    val coverCycles = 10
+
     val inClkPeriod = 5
-    val outClkPeriod = 3
+    val outClkPeriod = 17
+    val maxPeriod = Math.max(inClkPeriod, outClkPeriod)
     FormalConfig
-      .withProve(50)
-      .withCover(coverCycles)
+      .withProve(maxPeriod * proveCycles)
+      .withCover(maxPeriod * coverCycles)
       .withAsync
       .withDebug
       .doVerify(new Component {
@@ -92,7 +95,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
 
         // back to back transaction cover test.
         val popArea = new ClockingArea(popClock) {
-          dut.io.pop.withCovers(initialCycles)
+          dut.io.pop.withCovers(back2backCycles)
           when(!reset) { dut.io.pop.withAsserts() }
           when(!reset & changed(dut.popCC.pushPtrGray)) {
             assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth - 1)
