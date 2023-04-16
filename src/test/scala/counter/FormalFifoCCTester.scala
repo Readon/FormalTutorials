@@ -63,7 +63,6 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val pushClock = ClockDomain.current
         val reset = ClockDomain.current.isResetActive
         val popClock = ClockDomain.external("pop")
-        // val popReset = popClock.isResetActive
 
         val inValue = in(UInt(3 bits))
         val inValid = in(Bool())
@@ -103,7 +102,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           dut.io.push.withAssumes()
           dut.io.push.withCovers()
 
-          when(!reset & changed(dut.pushCC.popPtrGray)) {
+          when(changed(dut.pushCC.popPtrGray)) {
             assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth)
           }
           assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
