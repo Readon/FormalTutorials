@@ -13,15 +13,15 @@ case class GlobalClock() {
     val timer = CounterFreeRun(period)
     val phase = if (!aligned) timer.value + anyconst(cloneOf(timer.value)) else timer.value
     assume(target.readClockWire === phase(timer.getBitsWidth - 1))
-    
+
     if (target.hasResetSignal) {
       assumeInitial(target.isResetActive)
       val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
-      if(target.config.resetKind == SYNC){
+      if (target.config.resetKind == SYNC) {
         when(pastValid & !activeEdge) { assume(!changed(target.isResetActive)) }
       } else {
         when(pastValid & !activeEdge) { assume(!fell(target.isResetActive)) }
-      }      
+      }
     }
   }
 
@@ -35,10 +35,18 @@ case class GlobalClock() {
     when(!target & timer.counter.value === 0) { timer.clear() }
     when(timer.counter.value > 0) { assume(target === True) }
   }
+
+  def alignAsyncResetStart(src: ClockDomain, dst: ClockDomain) = new ClockingArea(domain) {
+    if (src.hasResetSignal && dst.hasResetSignal && src.config.resetKind == ASYNC && dst.config.resetKind == ASYNC) {
+      assume(rose(src.isResetActive) === rose(dst.isResetActive))
+      when(!src.isResetActive & rose(dst.readClockWire)) { assume(dst.isResetActive === False) }
+      when(!dst.isResetActive & rose(src.readClockWire)) { assume(src.isResetActive === False) }
+    }
+  }
 }
 
 class FormalFifoCCTester extends SpinalFormalFunSuite {
-  def testMain(pushPeriod: Int, popPeriod: Int) = {
+  def testMain(pushPeriod: Int, popPeriod: Int, seperateReset: Boolean = false) = {
     val back2backCycles = 2
 
     val fifoDepth = 4
@@ -55,6 +63,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val pushClock = ClockDomain.current
         val reset = ClockDomain.current.isResetActive
         val popClock = ClockDomain.external("pop")
+        // val popReset = popClock.isResetActive
 
         val inValue = in(UInt(3 bits))
         val inValid = in(Bool())
@@ -64,8 +73,11 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         gclk.constraintClockDomain(pushClock, pushPeriod)
         gclk.constraintClockDomain(popClock, popPeriod)
         gclk.keepBoolLeastCycles(reset, popPeriod)
+        if (seperateReset) {
+          gclk.alignAsyncResetStart(pushClock, popClock)
+        }
 
-        val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
+        val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock, !seperateReset))
         gclk.assumeIOSync2Clock(pushClock, dut.io.push.valid)
         gclk.assumeIOSync2Clock(pushClock, dut.io.push.payload)
         gclk.assumeIOSync2Clock(popClock, dut.io.pop.ready)
@@ -124,5 +136,21 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
 
   test("fifo-verify ultra fast push") {
     testMain(2, 11)
+  }
+
+  test("fifo-verify fast pop reset seperately") {
+    testMain(5, 3, true)
+  }
+
+  test("fifo-verify fast push reset seperately") {
+    testMain(3, 5, true)
+  }
+
+  test("fifo-verify ultra fast pop reset seperately") {
+    testMain(11, 2, true)
+  }
+
+  test("fifo-verify ultra fast push reset seperately") {
+    testMain(2, 11, true)
   }
 }
