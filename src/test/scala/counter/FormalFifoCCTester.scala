@@ -39,14 +39,14 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           val popTimer = CounterFreeRun(outClkPeriod)
           val popPhase = anyconst(cloneOf(popTimer.value))
           assume(popClock.readClockWire === (popTimer.value + popPhase)(popTimer.getBitsWidth - 1))
+          when(pastValid & !rose(popClock.readClockWire)) { assume(!fell(popClock.isResetActive)) }
 
-          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
           val resetCounter = Counter(outClkPeriod)
           when(rose(reset) || (reset & resetCounter.value > 0)) { resetCounter.increment() }
           when(resetCounter.willOverflow) { resetCounter.clear() }
           when(resetCounter.value > 0) { assume(reset === True) }
 
-          when(!rose(popClock.readClockWire)) { assume(!fell(popClock.isResetActive)) }
+          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
           when(!rose(popClock.readClockWire)) { assume(!changed(outReady))}
         }
 
