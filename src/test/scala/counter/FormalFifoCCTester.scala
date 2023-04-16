@@ -39,9 +39,9 @@ case class GlobalClock() {
 
   def alignAsyncResetStart(src: ClockDomain, dst: ClockDomain) = new ClockingArea(domain) {
     if (src.hasResetSignal && dst.hasResetSignal && src.config.resetKind == ASYNC && dst.config.resetKind == ASYNC) {
-      assume(rose(src.isResetActive) === rose(dst.isResetActive))
-      when(!src.isResetActive & rose(dst.readClockWire)) { assume(dst.isResetActive === False) }
-      when(!dst.isResetActive & rose(src.readClockWire)) { assume(src.isResetActive === False) }
+      when(pastValid) { assume(rose(src.isResetActive) === rose(dst.isResetActive)) }
+      when(pastValid & !src.isResetActive & rose(dst.readClockWire)) { assume(dst.isResetActive === False) }
+      when(pastValid & !dst.isResetActive & rose(src.readClockWire)) { assume(src.isResetActive === False) }
     }
   }
 }
@@ -102,7 +102,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
       dut.io.push.withAssumes()
       dut.io.push.withCovers()
 
-      when(changed(dut.pushCC.popPtrGray)) {
+      when(pastValid & changed(dut.pushCC.popPtrGray)) {
         assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth)
       }
       assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
@@ -115,7 +115,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
       dut.io.pop.withCovers(back2backCycles)
       dut.io.pop.withAsserts()
 
-      when(changed(dut.popCC.pushPtrGray)) {
+      when(pastValid & changed(dut.popCC.pushPtrGray)) {
         assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth)
       }
     }
