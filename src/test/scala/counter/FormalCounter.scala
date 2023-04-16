@@ -35,6 +35,7 @@ class FormalCounterTester extends SpinalFormalFunSuite {
 
         val data = anyconst(UInt(4 bits))
         assume(data === 0)
+        cover(flow.valid && flow.payload === data)
 
         for(i <- 2 to 9) {
           cover(dut.value === i)
