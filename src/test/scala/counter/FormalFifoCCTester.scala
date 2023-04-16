@@ -33,6 +33,9 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           assume(pushClock.readClockWire === (timer.value + phase)(timer.getBitsWidth - 1))
           when(pastValid & !rose(pushClock.readClockWire)) { assume(!fell(pushClock.isResetActive)) }
           when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
+          val resetToPop = RegNextWhen(True, reset.rise(False)) init(False)
+          val resetCounter = Counter(3, inc = resetToPop & rose(popClock.readClockWire))
+          when(resetCounter.willOverflow) { resetCounter.clear; resetToPop := False}
 
           val popTimer = CounterFreeRun(2)
           val popPhase = anyconst(cloneOf(popTimer.value))
@@ -64,7 +67,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val popArea = new ClockingArea(popClock) {
           assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           dut.io.pop.withCovers(initialCycles)
-          // dut.io.pop.withAsserts()
+          when(!globalArea.resetToPop) { dut.io.pop.withAsserts() }
         }
       })
   }
