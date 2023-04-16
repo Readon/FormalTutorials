@@ -50,7 +50,7 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           assert(!valueNotChange)
         }
 
-        val hists = History(flow, 2, init = dut.initFlow)
+        val hists = History(flow, 2, init = dut.reset.getZero)
 
         cover(pastValid && past(flow.valid) && past(flow.payload === data))
         when(pastValid && past(hists(1).valid) && past(hists(1).payload === data)) {
