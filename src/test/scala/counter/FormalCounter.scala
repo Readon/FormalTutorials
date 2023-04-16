@@ -16,8 +16,8 @@ class LimitedCounter extends Component {
 class FormalCounterTester extends SpinalFormalFunSuite {
   def tester() {
     FormalConfig
-      .withBMC(20)
-      // .withProve(10)
+      .withBMC(10)
+      .withProve(10)
       .withCover(10)
       .withDebug
       .doVerify(new Component {
