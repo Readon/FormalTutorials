@@ -14,9 +14,11 @@ case class GlobalClock() {
     val phase = if (!aligned) timer.value + anyconst(cloneOf(timer.value)) else timer.value
     assume(target.readClockWire === phase(timer.getBitsWidth - 1))
     
-    assumeInitial(target.isResetActive)
-    val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
-    when(pastValid & !activeEdge) { assume(!fell(target.isResetActive)) }
+    if (target.hasResetSignal) {
+      assumeInitial(target.isResetActive)
+      val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
+      when(pastValid & !activeEdge) { assume(!fell(target.isResetActive)) }
+    }
   }
 
   def assumeIOSync2Clock(target: ClockDomain, signal: Data) = new ClockingArea(domain) {
@@ -49,7 +51,6 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val pushClock = ClockDomain.current
         val reset = ClockDomain.current.isResetActive
         val popClock = ClockDomain.external("pop")
-        val popReset = popClock.isResetActive
 
         val inValue = in(UInt(3 bits))
         val inValid = in(Bool())
@@ -94,11 +95,11 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         }
 
         // back to back transaction cover test.
-        val popArea = new ClockingArea(popClock) {
+        val popArea = new ClockingArea(popClock.copy(reset = reset)) {
           dut.io.pop.withCovers(back2backCycles)
-          when(!reset) { dut.io.pop.withAsserts() }
+          dut.io.pop.withAsserts()
 
-          when(!reset & changed(dut.popCC.pushPtrGray)) {
+          when(changed(dut.popCC.pushPtrGray)) {
             assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth)
           }
         }
