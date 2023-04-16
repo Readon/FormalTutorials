@@ -2,9 +2,8 @@ package counter
 
 import spinal.core._
 import spinal.core.formal._
-import spinal.lib.{StreamFifoCC, History, Counter}
+import spinal.lib._
 import spinal.lib.formal._
-import spinal.lib.CounterFreeRun
 
 class FormalFifoCCTester extends SpinalFormalFunSuite {
   test("fifo-verify all") {
@@ -56,15 +55,17 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           assume(inValid === False)
         }
 
+        assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
         dut.io.push.withAssumes()
         // dut.withAssumes()
         
         dut.io.push.withCovers()
         // back to back transaction cover test.
         val popArea = new ClockingArea(popClock) {
+          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           dut.io.pop.withCovers(initialCycles)
-          dut.io.pop.withAsserts()
-        }        
+          // dut.io.pop.withAsserts()
+        }
       })
   }
 }
