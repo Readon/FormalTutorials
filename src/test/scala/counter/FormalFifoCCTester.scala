@@ -9,16 +9,18 @@ case class GlobalClock() {
   val domain = ClockDomain.internal("_global").withBootReset()
   domain.clock.addAttribute("gclk")
 
-  def constraintClockDomain(domain: ClockDomain, period: Int, aligned: Boolean = false) = new ClockingArea(domain) {
+  def constraintClockDomain(target: ClockDomain, period: Int, aligned: Boolean = false) = new ClockingArea(domain) {
     val timer = CounterFreeRun(period)
     val phase = if (!aligned) timer.value + anyconst(cloneOf(timer.value)) else timer.value
-    assume(domain.readClockWire === phase(timer.getBitsWidth - 1))
-    val activeEdge = if (domain.config.clockEdge == RISING) rose(domain.readClockWire) else fell(domain.readClockWire)
-    when(pastValid & !activeEdge) { assume(!fell(domain.isResetActive)) }
+    assume(target.readClockWire === phase(timer.getBitsWidth - 1))
+    
+    assumeInitial(target.isResetActive)
+    val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
+    when(pastValid & !activeEdge) { assume(!fell(target.isResetActive)) }
   }
 
-  def clockAlignIO(domain: ClockDomain, signal: Data) = new ClockingArea(domain) {
-    val activeEdge = if (domain.config.clockEdge == RISING) rose(domain.readClockWire) else fell(domain.readClockWire)
+  def assumeIOSync2Clock(target: ClockDomain, signal: Data) = new ClockingArea(domain) {
+    val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
     when(pastValid & !activeEdge) { assume(!changed(signal)) }
   }
 
@@ -59,20 +61,9 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         gclk.keepBoolLeastCycles(reset, popPeriod)
 
         val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
-        gclk.clockAlignIO(pushClock, dut.io.push.valid)
-        gclk.clockAlignIO(pushClock, dut.io.push.payload)
-        gclk.clockAlignIO(popClock, dut.io.pop.ready)
-
-        val checkArea = new ClockingArea(gclk.domain) {
-          when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
-            .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
-
-          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
-          assert(fromGray(dut.popCC.pushPtrGray) - dut.popCC.popPtr <= fifoDepth)
-        }
-
-        assumeInitial(reset)
-        assumeInitial(popReset)
+        gclk.assumeIOSync2Clock(pushClock, dut.io.push.valid)
+        gclk.assumeIOSync2Clock(pushClock, dut.io.push.payload)
+        gclk.assumeIOSync2Clock(popClock, dut.io.pop.ready)
 
         dut.io.push.payload := inValue
         dut.io.push.valid := inValid
@@ -83,18 +74,30 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           assume(inValid === False)
         }
 
-        dut.io.push.withAssumes()
-        dut.io.push.withCovers()
-        when(!reset & changed(dut.pushCC.popPtrGray)) {
-          assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth)
+        val globalArea = new ClockingArea(gclk.domain) {
+          when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
+            .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
+
+          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
+          assert(fromGray(dut.popCC.pushPtrGray) - dut.popCC.popPtr <= fifoDepth)
         }
-        assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
-        assert(dut.pushCC.pushPtr - fromGray(dut.pushCC.popPtrGray) <= fifoDepth)
+
+        val pushArea = new ClockingArea(pushClock) {
+          dut.io.push.withAssumes()
+          dut.io.push.withCovers()
+
+          when(!reset & changed(dut.pushCC.popPtrGray)) {
+            assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth)
+          }
+          assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
+          assert(dut.pushCC.pushPtr - fromGray(dut.pushCC.popPtrGray) <= fifoDepth)
+        }
 
         // back to back transaction cover test.
         val popArea = new ClockingArea(popClock) {
           dut.io.pop.withCovers(back2backCycles)
           when(!reset) { dut.io.pop.withAsserts() }
+
           when(!reset & changed(dut.popCC.pushPtrGray)) {
             assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth)
           }
