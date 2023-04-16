@@ -33,6 +33,8 @@ class FormalCounterTester extends SpinalFormalFunSuite {
         val reset = ClockDomain.current.isResetActive
         assumeInitial(reset)
 
+        val data = anyconst(UInt(4 bits))
+
         for(i <- 2 to 9) {
           cover(dut.value === i)
         }
@@ -44,6 +46,10 @@ class FormalCounterTester extends SpinalFormalFunSuite {
         when(pastValid && past(inc) && !past(flow.valid) && dut.value < 10){
           assert(dut.value === past(dut.value) + 1)
           // assert(!valueNotChange)
+        }
+
+        when(pastValid && past(flow.valid) && past(flow.payload === data)) {
+          assert(dut.value === data)
         }
 
         val outOfBound = dut.value > 10 || dut.value < 2
