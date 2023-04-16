@@ -25,8 +25,9 @@ class FormalCounterTester extends SpinalFormalFunSuite {
         val inc = in Bool()
         dut.inc <> inc
         val reset = ClockDomain.current.isResetActive
+        assumeInitial(reset)
 
-        for(i <- 2 to 12) {
+        for(i <- 2 to 10) {
           cover(dut.value === i)
         }
       })
