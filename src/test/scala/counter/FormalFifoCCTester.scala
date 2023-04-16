@@ -117,7 +117,8 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         }
 
         // back to back transaction cover test.
-        val popArea = new ClockingArea(popClock.copy(reset = reset)) {
+        val popCheckDomain = if (seperateReset) popClock else popClock.copy(reset = reset)
+        val popArea = new ClockingArea(popCheckDomain) {
           dut.io.pop.withCovers(back2backCycles)
           dut.io.pop.withAsserts()
 
