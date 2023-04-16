@@ -31,9 +31,11 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           cover(dut.value === i)
         }
 
-        when(pastValid && past(inc)){
+        when(pastValid && past(inc) && dut.value < 10){
           assert(changed(dut.value))
         }
+
+        assert(dut.value <= 10 && dut.value >= 2)
       })
   }
   test("formal_tester") {
