@@ -37,11 +37,13 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           cover(dut.value === i)
         }
 
+        // assume(inc =/= flow.valid)
+        assume(flow.payload >= 2 && flow.payload <= 10)
 
         val valueNotChange = dut.value =/= past(dut.value) + 1
-        when(pastValid && past(inc) && dut.value < 10){
-          // assert(changed(dut.value))
-          assert(!valueNotChange)
+        when(pastValid && past(inc) && !past(flow.valid) && dut.value < 10){
+          assert(dut.value === past(dut.value) + 1)
+          // assert(!valueNotChange)
         }
 
         val outOfBound = dut.value > 10 || dut.value < 2
