@@ -7,13 +7,18 @@ import spinal.lib._
 class LimitedCounter extends Component {
   // The value register will always be between [2:10]
   val reset = slave Flow(UInt(4 bits))
+  val initFlow = Flow(UInt(4 bits))
+  initFlow.valid := False
+  initFlow.payload := 0
+  val workFlow = RegNext(reset) init(initFlow)
+
   val inc = in Bool()
   val value = Reg(UInt(4 bits)) init (2)
   when(inc && value < 10) {
     value := value + 1
   }
-  when(reset.valid) {
-    value := reset.payload
+  when(workFlow.valid) {
+    value := workFlow.payload
   }
 }
 
