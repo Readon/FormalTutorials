@@ -67,11 +67,10 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         GlobalClock.clockAlignIO(popClock, dut.io.pop.ready)
 
         val checkArea = new ClockingArea(GlobalClock.gclk) {
-          assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
-          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
             .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
-          assert(dut.pushCC.pushPtr - fromGray(dut.pushCC.popPtrGray) <= fifoDepth)
+
+          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           assert(fromGray(dut.popCC.pushPtrGray) - dut.popCC.popPtr <= fifoDepth)
         }
 
@@ -92,6 +91,8 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         when(!reset & changed(dut.pushCC.popPtrGray)) {
           assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth)
         }
+        assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
+        assert(dut.pushCC.pushPtr - fromGray(dut.pushCC.popPtrGray) <= fifoDepth)
 
         // back to back transaction cover test.
         val popArea = new ClockingArea(popClock) {
