@@ -45,13 +45,13 @@ class FormalCounterTester extends SpinalFormalFunSuite {
         assume(flow.payload >= 2 && flow.payload <= 10)
 
         val valueNotChange = dut.value =/= past(dut.value) + 1
-        when(pastValidAfterReset && past(inc) && !past(flow.valid) && dut.value < 10){
+        when(pastValidAfterReset && past(inc) && !past(dut.workFlow.valid) && dut.value < 10){
           // assert(dut.value === past(dut.value) + 1)
           assert(!valueNotChange)
         }
 
         cover(pastValidAfterReset && past(flow.valid) && past(flow.payload === data))
-        when(pastValidAfterReset && past(flow.valid) && past(flow.payload === data)) {
+        when(pastValidAfterReset && past(dut.workFlow.valid) && past(dut.workFlow.payload === data)) {
           assert(dut.value === data)
         }
 
