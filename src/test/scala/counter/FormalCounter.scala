@@ -31,6 +31,12 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           cover(dut.value === i)
         }
 
+        when(past(inc)){
+          assume(inc === False)
+        }.otherwise {
+          assume(inc === True)
+        }
+
         val valueNotChange = dut.value =/= past(dut.value) + 1
         when(pastValid && past(inc) && dut.value < 10){
           // assert(changed(dut.value))
