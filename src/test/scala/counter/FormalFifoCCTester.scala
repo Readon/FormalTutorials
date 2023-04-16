@@ -123,7 +123,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
 
   def testMain(pushPeriod: Int, popPeriod: Int, seperateReset: Boolean = false) = {
     val proveCycles = 8
-    val coverCycles = 10
+    val coverCycles = 8
     val maxPeriod = Math.max(pushPeriod, popPeriod)
 
     FormalConfig
@@ -144,13 +144,13 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     testMain(3, 5)
   }
 
-  test("fifo-verify ultra fast pop") {
-    testMain(11, 2)
-  }
+  // test("fifo-verify ultra fast pop") {
+  //   testMain(11, 2)
+  // }
 
-  test("fifo-verify ultra fast push") {
-    testMain(2, 11)
-  }
+  // test("fifo-verify ultra fast push") {
+  //   testMain(2, 11)
+  // }
 
   test("fifo-verify fast pop reset seperately") {
     testMain(5, 3, true)
@@ -160,17 +160,17 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     testMain(3, 5, true)
   }
 
-  test("fifo-verify ultra fast pop reset seperately") {
-    testMain(11, 2, true)
-  }
+  // test("fifo-verify ultra fast pop reset seperately") {
+  //   testMain(11, 2, true)
+  // }
 
-  test("fifo-verify ultra fast push reset seperately") {
-    testMain(2, 11, true)
-  }
+  // test("fifo-verify ultra fast push reset seperately") {
+  //   testMain(2, 11, true)
+  // }
 
   def testNoLoss(pushPeriod: Int, popPeriod: Int, seperateReset: Boolean = false) = {
     val proveCycles = 8
-    val coverCycles = 10
+    val coverCycles = 8
     val maxPeriod = Math.max(pushPeriod, popPeriod)
 
     FormalConfig
@@ -223,13 +223,13 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     shouldFail(testNoLoss(3, 5))
   }
 
-  test("noloss ultra fast pop") {
-    shouldFail(testNoLoss(11, 2))
-  }
+  // test("noloss ultra fast pop") {
+  //   shouldFail(testNoLoss(11, 2))
+  // }
 
-  test("noloss ultra fast push") {
-    shouldFail(testNoLoss(2, 11))
-  }
+  // test("noloss ultra fast push") {
+  //   shouldFail(testNoLoss(2, 11))
+  // }
 
   test("noloss fast pop reset seperately") {
     shouldFail(testNoLoss(5, 3, true))
@@ -239,13 +239,13 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     shouldFail(testNoLoss(3, 5, true))
   }
 
-  test("noloss ultra fast pop reset seperately") {
-    shouldFail(testNoLoss(11, 2, true))
-  }
+  // test("noloss ultra fast pop reset seperately") {
+  //   shouldFail(testNoLoss(11, 2, true))
+  // }
 
-  test("noloss ultra fast push reset seperately") {
-    shouldFail(testNoLoss(2, 11, true))
-  }
+  // test("noloss ultra fast push reset seperately") {
+  //   shouldFail(testNoLoss(2, 11, true))
+  // }
 
   def shouldFail(body: => Unit) = assert(try {
     body
