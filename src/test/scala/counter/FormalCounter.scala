@@ -31,12 +31,14 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           cover(dut.value === i)
         }
 
+        val valueNotChange = dut.value =/= past(dut.value) + 1
         when(pastValid && past(inc) && dut.value < 10){
           // assert(changed(dut.value))
-          assert(dut.value === past(dut.value) + 1)
+          assert(!valueNotChange)
         }
-        
-        assert(dut.value <= 10 && dut.value >= 2)
+
+        val outOfBound = dut.value > 10 || dut.value < 2
+        assert(!outOfBound)
       })
   }
   test("formal_tester") {
