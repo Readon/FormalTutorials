@@ -35,7 +35,6 @@ class FormalCounterTester extends SpinalFormalFunSuite {
 
         val data = anyconst(UInt(4 bits))
         assume(data === 0)
-        cover(flow.valid && flow.payload === data)
 
         for(i <- 2 to 9) {
           cover(dut.value === i)
@@ -46,8 +45,8 @@ class FormalCounterTester extends SpinalFormalFunSuite {
 
         val valueNotChange = dut.value =/= past(dut.value) + 1
         when(pastValid && past(inc) && !past(flow.valid) && dut.value < 10){
-          assert(dut.value === past(dut.value) + 1)
-          // assert(!valueNotChange)
+          // assert(dut.value === past(dut.value) + 1)
+          assert(!valueNotChange)
         }
 
         when(pastValid && past(flow.valid) && past(flow.payload === data)) {
