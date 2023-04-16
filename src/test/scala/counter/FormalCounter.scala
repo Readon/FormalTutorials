@@ -6,10 +6,14 @@ import spinal.lib._
 
 class LimitedCounter extends Component {
   // The value register will always be between [2:10]
+  val reset = slave Flow(UInt(4 bits))
   val inc = in Bool()
   val value = Reg(UInt(4 bits)) init (2)
   when(inc && value < 10) {
     value := value + 1
+  }
+  when(reset.valid) {
+    value := reset.payload
   }
 }
 
@@ -24,6 +28,8 @@ class FormalCounterTester extends SpinalFormalFunSuite {
         val dut = FormalDut(new LimitedCounter())
         val inc = in Bool()
         dut.inc <> inc
+        val flow = slave Flow(UInt(4 bits))
+        dut.reset << flow
         val reset = ClockDomain.current.isResetActive
         assumeInitial(reset)
 
@@ -31,11 +37,6 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           cover(dut.value === i)
         }
 
-        when(past(inc)){
-          assume(inc === False)
-        }.otherwise {
-          assume(inc === True)
-        }
 
         val valueNotChange = dut.value =/= past(dut.value) + 1
         when(pastValid && past(inc) && dut.value < 10){
