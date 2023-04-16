@@ -75,9 +75,12 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         assumeInitial(popReset)
 
         gclk.assumeClockTiming(pushClock, pushPeriod)
-        gclk.assumeClockTiming(popClock, popPeriod)
-        gclk.keepBoolLeastCycles(reset, popPeriod)
         gclk.assumeResetReleaseSync(pushClock)
+        if (!seperateReset) {
+          gclk.keepBoolLeastCycles(reset, popPeriod)
+        }
+
+        gclk.assumeClockTiming(popClock, popPeriod)
         if (seperateReset) {
           gclk.assumeResetReleaseSync(popClock)
           gclk.alignAsyncResetStart(pushClock, popClock)
