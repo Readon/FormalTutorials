@@ -3,6 +3,7 @@ package counter
 import spinal.core.formal._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.formal._
 
 class LimitedCounter extends Component {
   // The value register will always be between [2:10]
@@ -20,7 +21,7 @@ class LimitedCounter extends Component {
 }
 
 class FormalCounterTester extends SpinalFormalFunSuite {
-  def tester() {
+  def tester() : Unit = {
     FormalConfig
       .withBMC(10)
       .withProve(10)
