@@ -90,7 +90,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         dut.io.push.withAssumes()
         dut.io.push.withCovers()
         when(!reset & changed(dut.pushCC.popPtrGray)) {
-          assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth - 1)
+          assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth)
         }
 
         // back to back transaction cover test.
@@ -98,7 +98,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           dut.io.pop.withCovers(back2backCycles)
           when(!reset) { dut.io.pop.withAsserts() }
           when(!reset & changed(dut.popCC.pushPtrGray)) {
-            assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth - 1)
+            assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth)
           }
         }
       })
