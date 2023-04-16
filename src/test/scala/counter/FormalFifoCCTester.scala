@@ -11,7 +11,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     val inOutDelay = 2
     val coverCycles = 50
     FormalConfig
-      .withProve(10)
+      .withProve(50)
       .withCover(coverCycles)
       .withAsync
       .withDebug
@@ -24,7 +24,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val inValue = in (UInt(3 bits))
         val inValid = in (Bool())
         val outReady = in (Bool())
-        val globalClock = ClockDomain.internal("global", ClockDomainConfig(resetKind = BOOT))
+        val globalClock = ClockDomain.internal("global").withBootReset()
         globalClock.clock.addAttribute("gclk")
 
         val globalArea = new ClockingArea(globalClock) {
