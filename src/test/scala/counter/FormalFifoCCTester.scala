@@ -57,6 +57,8 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
           .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
+          assert(dut.pushCC.pushPtr - fromGray(dut.pushCC.popPtrGray) <= fifoDepth)
+          assert(fromGray(dut.popCC.pushPtrGray) - dut.popCC.popPtr <= fifoDepth)
         }
 
         assumeInitial(reset)
@@ -73,11 +75,17 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
 
         dut.io.push.withAssumes()
         dut.io.push.withCovers()
-        
+        when(!reset & changed(dut.pushCC.popPtrGray)) {
+          assert(fromGray(dut.pushCC.popPtrGray) - past(fromGray(dut.pushCC.popPtrGray)) <= fifoDepth - 1)
+        }
+
         // back to back transaction cover test.
         val popArea = new ClockingArea(popClock) {
           dut.io.pop.withCovers(initialCycles)
           when(!reset) { dut.io.pop.withAsserts() }
+          when(!reset & changed(dut.popCC.pushPtrGray)) {
+            assert(fromGray(dut.popCC.pushPtrGray) - past(fromGray(dut.popCC.pushPtrGray)) <= fifoDepth - 1)
+          }
         }
       })
   }
