@@ -6,7 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH="$PATH:/opt/
 
 USER root
 
-ARG DEPS_RUNTIME="ca-certificates gnupg2 openjdk-11-jdk-headless ccache curl g++ gcc git libtcl8.6 python3 python3-pip python3-pip-whl libpython3-dev ssh locales make ghdl iverilog libboost1.74-dev"
+ARG DEPS_RUNTIME="ca-certificates gnupg2 openjdk-11-jdk-headless ccache curl g++ gcc git libtcl8.6 python3 python3-pip python3-wheel libpython3-dev ssh locales make ghdl iverilog libboost1.74-dev"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $DEPS_RUNTIME && \
     apt-get clean && \
