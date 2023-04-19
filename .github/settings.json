@@ -1,0 +1,12 @@
+{
+    "openInExternalApp.openMapper": [
+        {
+            "extensionName": "vcd",
+            "apps": "gtkwave"
+        },					
+        {
+            "extensionName": "fst",
+            "apps": "gtkwave"
+        }
+    ]
+}
