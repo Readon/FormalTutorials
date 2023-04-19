@@ -36,6 +36,8 @@ RUN mkdir bloop && cd bloop && \
     ./cs install bloop && \
     ./cs install metals
 
+USER coder
+
 ARG JAVA_EXTRA_OPTS="-Xmx2g -Xms2g"
 ENV JAVA_OPTS="${JAVA_OPTS} ${JAVA_EXTRA_OPTS}"
 RUN git clone https://github.com/Readon/FormalTutorials.git && \ 
@@ -45,5 +47,3 @@ RUN git clone https://github.com/Readon/FormalTutorials.git && \
     sbt compile && \
     mill _.compile && \
     cd ..
-
-CMD ["code-server", "--link"]
