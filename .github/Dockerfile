@@ -4,7 +4,7 @@ FROM codercom/code-server AS run
 
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH="$PATH:/opt/bin"
 
-ARG DEPS_RUNTIME="ca-certificates gnupg2 openjdk-11-jdk-headless ccache curl g++ gcc git libtcl8.6 python3 python3-pip python3-pip-whl libpython3-dev ssh locales make ghdl iverilog libboost1.74-dev gtkwave"
+ARG DEPS_RUNTIME="ca-certificates gnupg2 openjdk-11-jdk-headless ccache curl g++ gcc git libtcl8.6 python3 python3-pip python3-pip-whl libpython3-dev ssh locales make ghdl iverilog libboost1.74-dev"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $DEPS_RUNTIME && \
     apt-get clean && \
@@ -23,12 +23,17 @@ RUN curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E4
     
 COPY --from=builder /opt /opt
 
-COPY ./settings.json /root/.local/share/code-server/User/settings.json
-USER root
 RUN code-server --install-extension scalameta.metals
 RUN code-server --install-extension mhutchie.git-graph
 RUN code-server --install-extension donjayamanne.githistory
-RUN code-server --install-extension YuTengjing.open-in-external-app
+
+RUN mkdir bloop && cd bloop && \
+    curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz | gzip -d > cs && \
+    chmod +x cs && \
+    ./cs setup --yes && \
+    ./cs install sbt-bloop && \
+    ./cs install bloop && \
+    ./cs install metals
 
 ARG JAVA_EXTRA_OPTS="-Xmx2g -Xms2g"
 ENV JAVA_OPTS="${JAVA_OPTS} ${JAVA_EXTRA_OPTS}"
@@ -38,4 +43,6 @@ RUN git clone https://github.com/Readon/FormalTutorials.git && \
     git submodule update --init --recursive && \
     sbt compile && \
     mill _.compile && \
-    cd .. && rm -rf FormalTutorials
+    cd ..
+
+CMD ["code-server", "--link"]
