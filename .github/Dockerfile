@@ -33,7 +33,6 @@ RUN mkdir bloop && cd bloop && \
     curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz | gzip -d > cs && \
     chmod +x cs && \
     ./cs setup --yes && \
-    ./cs install sbt-bloop && \
     ./cs install bloop && \
     ./cs install metals
 
