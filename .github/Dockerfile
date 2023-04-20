@@ -25,6 +25,8 @@ RUN curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E4
     
 COPY --from=builder /opt /opt
 
+USER coder
+
 RUN code-server --install-extension scalameta.metals
 RUN code-server --install-extension mhutchie.git-graph
 RUN code-server --install-extension donjayamanne.githistory
@@ -35,8 +37,6 @@ RUN mkdir bloop && cd bloop && \
     ./cs setup --yes && \
     ./cs install bloop && \
     ./cs install metals
-
-USER coder
 
 ARG JAVA_EXTRA_OPTS="-Xmx2g -Xms2g"
 ENV JAVA_OPTS="${JAVA_OPTS} ${JAVA_EXTRA_OPTS}"
