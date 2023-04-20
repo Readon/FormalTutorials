@@ -27,8 +27,6 @@ COPY --from=builder /opt /opt
 
 USER coder
 
-ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH="$PATH:/opt/bin"
-
 RUN code-server --install-extension scalameta.metals
 RUN code-server --install-extension mhutchie.git-graph
 RUN code-server --install-extension donjayamanne.githistory
@@ -39,6 +37,8 @@ RUN mkdir bloop && cd bloop && \
     ./cs setup --yes && \
     ./cs install bloop && \
     ./cs install metals
+
+RUN echo "export PATH=\"\$PATH:/opt/bin\"" >> ~/.bashrc
 
 ARG JAVA_EXTRA_OPTS="-Xmx2g -Xms2g"
 ENV JAVA_OPTS="${JAVA_OPTS} ${JAVA_EXTRA_OPTS}"
