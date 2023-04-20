@@ -27,16 +27,14 @@ COPY --from=builder /opt /opt
 
 USER coder
 
-RUN code-server --install-extension scalameta.metals
+ARG METALS_VERSION="1.22.0"
+RUN code-server --install-extension scalameta.metals@$METALS_VERSION
 RUN code-server --install-extension mhutchie.git-graph
 RUN code-server --install-extension donjayamanne.githistory
 
-RUN mkdir bloop && cd bloop && \
-    curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz | gzip -d > cs && \
-    chmod +x cs && \
-    ./cs setup --yes && \
-    ./cs install bloop && \
-    ./cs install metals
+ENV COURSIER_CMD="java -Xmx1G -Dfile.encoding=UTF-8 -jar /home/coder/.local/share/code-server/extensions/scalameta.metals-$METALS_VERSION-universal/coursier"
+RUN $COURSIER_CMD install bloop && \
+    $COURSIER_CMD install metals
 
 RUN echo "export PATH=\"\$PATH:/opt/bin\"" >> ~/.bashrc
 
