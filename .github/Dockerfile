@@ -27,6 +27,8 @@ COPY --from=builder /opt /opt
 
 USER coder
 
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH="$PATH:/opt/bin"
+
 RUN code-server --install-extension scalameta.metals
 RUN code-server --install-extension mhutchie.git-graph
 RUN code-server --install-extension donjayamanne.githistory
