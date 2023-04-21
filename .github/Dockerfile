@@ -1,12 +1,12 @@
 FROM ghcr.io/readon/spinalhdl:master AS builder
 
-FROM codercom/code-server AS run
+FROM codercom/code-server:4.11.0-ubuntu AS run
 
 ENV DEBIAN_FRONTEND=noninteractive LANG=C.UTF-8 LC_ALL=C.UTF-8 PATH="$PATH:/opt/bin"
 
 USER root
 
-ARG DEPS_RUNTIME="ca-certificates gnupg2 openjdk-11-jdk-headless ccache curl g++ gcc git libtcl8.6 python3 python3-pip python3-wheel libpython3-dev ssh locales make ghdl iverilog libboost1.74-dev"
+ARG DEPS_RUNTIME="ca-certificates gnupg2 openjdk-11-jdk-headless ccache curl g++ gcc git libtcl8.6 python3 python3-pip python3-wheel libpython3-dev ssh locales make ghdl iverilog libboost1.71-dev"
 RUN apt-get update && \
     apt-get install -y --no-install-recommends $DEPS_RUNTIME && \
     apt-get clean && \
