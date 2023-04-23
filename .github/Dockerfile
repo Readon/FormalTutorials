@@ -1,4 +1,17 @@
-FROM ghcr.io/readon/spinalhdl:docker
+FROM ghcr.io/readon/spinalhdl:docker AS base
+
+FROM base AS builder
+
+ENV CODE_SERVER_VERSION=4.12.0
+RUN curl -sSOL https://github.com/coder/code-server/releases/download/v${CODE_SERVER_VERSION}/code-server_${CODE_SERVER_VERSION}_amd64.deb && \
+    dpkg -i code-server_${CODE_SERVER_VERSION}_amd64.deb
+
+RUN /usr/bin/code-server --install-extension scalameta.metals && \
+    /usr/bin/code-server --install-extension mhutchie.git-graph && \
+    /usr/bin/code-server --install-extension donjayamanne.githistory && \
+    /usr/bin/code-server --install-extension YuTengjing.open-in-external-app
+
+# FROM base AS run
 
 ARG DEPS_RUNTIME="gtkwave"
 RUN apt-get update && \
