@@ -1,4 +1,4 @@
-FROM ghcr.io/readon/spinalhdl:master
+FROM ghcr.io/readon/spinalhdl:docker
 
 ARG DEPS_RUNTIME="gtkwave"
 RUN apt-get update && \
