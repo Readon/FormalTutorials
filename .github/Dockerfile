@@ -6,7 +6,7 @@ ENV CODE_SERVER_VERSION=4.12.0
 RUN curl -sSOL https://github.com/coder/code-server/releases/download/v${CODE_SERVER_VERSION}/code-server_${CODE_SERVER_VERSION}_amd64.deb && \
     dpkg -i code-server_${CODE_SERVER_VERSION}_amd64.deb
 
-ARG METALS_VERSION="1.22.0"
+ARG METALS_VERSION="1.23.0"
 ARG EXTENSION_DIR=/root/.vscode-server/extensions
 RUN mkdir -p $EXTENSION_DIR
 RUN /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension scalameta.metals@${METALS_VERSION} && \
