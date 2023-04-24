@@ -15,8 +15,8 @@ RUN /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-exten
     /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension YuTengjing.open-in-external-app
 
 ENV COURSIER_CMD="$EXTENSION_DIR/scalameta.metals-$METALS_VERSION-universal/coursier"
-RUN $COURSIER_CMD install bloop && \
-    $COURSIER_CMD install metals
+RUN $COURSIER_CMD install bloop:1.5.6 && \
+    $COURSIER_CMD install metals:0.11.12
 
 # FROM base AS run
 
