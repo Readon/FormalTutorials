@@ -10,6 +10,7 @@ ARG METALS_VERSION="1.23.0"
 ARG EXTENSION_DIR=/root/.vscode-server/extensions
 RUN mkdir -p $EXTENSION_DIR
 RUN /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension scalameta.metals@${METALS_VERSION} && \
+    /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension ms-ceintl.vscode-language-pack-zh-hans && \
     /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension mhutchie.git-graph && \
     /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension donjayamanne.githistory && \
     /usr/bin/code-server --extensions-dir $EXTENSION_DIR --force --install-extension YuTengjing.open-in-external-app
