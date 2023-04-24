@@ -18,7 +18,7 @@ ENV COURSIER_CMD="$EXTENSION_DIR/scalameta.metals-$METALS_VERSION-universal/cour
 RUN $COURSIER_CMD install bloop:1.5.6 && \
     $COURSIER_CMD install metals:0.11.12
 
-# FROM base AS run
+FROM base AS run
 
 ARG DEPS_RUNTIME="gtkwave"
 RUN apt-get update && \
@@ -36,3 +36,6 @@ RUN git clone https://github.com/Readon/FormalTutorials.git && \
     sbt compile && \
     mill _.compile && \
     cd .. && rm -rf FormalTutorials
+
+COPY --from=builder /root/.vscode-server/extensions /root/.vscode-server/extensions
+COPY --from=builder /sbt/.cache/coursier /sbt/.cache/coursier
