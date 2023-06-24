@@ -16,6 +16,12 @@ object GlobalClock {
     val activeEdge = if (domain.config.clockEdge == RISING) rose(domain.readClockWire) else fell(domain.readClockWire)
     when(pastValid & !activeEdge) { assume(!fell(domain.isResetActive)) }
   }
+
+  def clockAlignIO(domain: ClockDomain, signal: Data) = new ClockingArea(gclk) {
+    val activeEdge = if (domain.config.clockEdge == RISING) rose(domain.readClockWire) else fell(domain.readClockWire)
+    when(pastValid & !activeEdge) { assume(!changed(signal)) }
+  }
+
   }
 }
 
@@ -50,12 +56,12 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           when(rose(reset) || (reset & resetCounter.value > 0)) { resetCounter.increment() }
           when(resetCounter.willOverflow) { resetCounter.clear() }
           when(resetCounter.value > 0) { assume(reset === True) }
-
-          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue)) }
-          when(!rose(popClock.readClockWire)) { assume(!changed(outReady)) }
         }
 
         val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
+        GlobalClock.clockAlignIO(pushClock, dut.io.push.valid)
+        GlobalClock.clockAlignIO(pushClock, dut.io.push.payload)
+        GlobalClock.clockAlignIO(popClock, dut.io.pop.ready)
 
         val checkArea = new ClockingArea(GlobalClock.gclk) {
           assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
