@@ -34,6 +34,7 @@ class FormalCounterTester extends SpinalFormalFunSuite {
         assumeInitial(reset)
 
         val data = anyconst(UInt(4 bits))
+        assume(data === 0)
 
         for(i <- 2 to 9) {
           cover(dut.value === i)
