@@ -9,13 +9,14 @@ case class GlobalClock() {
   val domain = ClockDomain.internal("_global").withBootReset()
   domain.clock.addAttribute("gclk")
 
-  def constraintClockDomain(target: ClockDomain, period: Int, aligned: Boolean = false) = new ClockingArea(domain) {
+  def assumeClockTiming(target: ClockDomain, period: Int, aligned: Boolean = false) = new ClockingArea(domain) {
     val timer = CounterFreeRun(period)
     val phase = if (!aligned) timer.value + anyconst(cloneOf(timer.value)) else timer.value
     assume(target.readClockWire === phase(timer.getBitsWidth - 1))
+  }
 
+  def assumeResetReleaseSync(target: ClockDomain) = new ClockingArea(domain) {
     if (target.hasResetSignal) {
-      assumeInitial(target.isResetActive)
       val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
       if (target.config.resetKind == SYNC) {
         when(pastValid & !activeEdge) { assume(!changed(target.isResetActive)) }
@@ -61,18 +62,24 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
       .withDebug
       .doVerify(new Component {
         val pushClock = ClockDomain.current
-        val reset = ClockDomain.current.isResetActive
+        val reset = pushClock.isResetActive
         val popClock = ClockDomain.external("pop")
+        val popReset = popClock.isResetActive
 
         val inValue = in(UInt(3 bits))
         val inValid = in(Bool())
         val outReady = in(Bool())
         val gclk = GlobalClock()
 
-        gclk.constraintClockDomain(pushClock, pushPeriod)
-        gclk.constraintClockDomain(popClock, popPeriod)
+        assumeInitial(reset)
+        assumeInitial(popReset)
+
+        gclk.assumeClockTiming(pushClock, pushPeriod)
+        gclk.assumeClockTiming(popClock, popPeriod)
         gclk.keepBoolLeastCycles(reset, popPeriod)
+        gclk.assumeResetReleaseSync(pushClock)
         if (seperateReset) {
+          gclk.assumeResetReleaseSync(popClock)
           gclk.alignAsyncResetStart(pushClock, popClock)
         }
 
