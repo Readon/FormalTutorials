@@ -11,6 +11,8 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     val inOutDelay = 2
     val coverCycles = 50
     val fifoDepth = 4
+    val inClkPeriod = 5
+    val outClkPeriod = 3
     FormalConfig
       .withProve(50)
       .withCover(coverCycles)
@@ -25,21 +27,21 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val inValue = in (UInt(3 bits))
         val inValid = in (Bool())
         val outReady = in (Bool())
-        val globalClock = ClockDomain.internal("global").withBootReset()
+        val globalClock = ClockDomain.internal("_global").withBootReset()
         globalClock.clock.addAttribute("gclk")
 
         val globalArea = new ClockingArea(globalClock) {
-          val timer = CounterFreeRun(5)
+          val timer = CounterFreeRun(inClkPeriod)
           val phase = anyconst(cloneOf(timer.value))
           assume(pushClock.readClockWire === (timer.value + phase)(timer.getBitsWidth - 1))
           when(pastValid & !rose(pushClock.readClockWire)) { assume(!fell(pushClock.isResetActive)) }
 
-          val popTimer = CounterFreeRun(2)
+          val popTimer = CounterFreeRun(outClkPeriod)
           val popPhase = anyconst(cloneOf(popTimer.value))
           assume(popClock.readClockWire === (popTimer.value + popPhase)(popTimer.getBitsWidth - 1))
 
           when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
-          val resetCounter = Counter(15)
+          val resetCounter = Counter(outClkPeriod)
           when(rose(reset) || (reset & resetCounter.value > 0)) { resetCounter.increment() }
           when(resetCounter.willOverflow) { resetCounter.clear() }
           when(resetCounter.value > 0) { assume(reset === True) }
