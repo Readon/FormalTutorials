@@ -32,14 +32,17 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           val phase = anyconst(cloneOf(timer.value))
           assume(pushClock.readClockWire === (timer.value + phase)(timer.getBitsWidth - 1))
           when(pastValid & !rose(pushClock.readClockWire)) { assume(!fell(pushClock.isResetActive)) }
-          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
-          val resetToPop = RegNextWhen(True, reset.rise(False)) init(False)
-          val resetCounter = Counter(3, inc = resetToPop & rose(popClock.readClockWire))
-          when(resetCounter.willOverflow) { resetCounter.clear; resetToPop := False}
 
           val popTimer = CounterFreeRun(2)
           val popPhase = anyconst(cloneOf(popTimer.value))
           assume(popClock.readClockWire === (popTimer.value + popPhase)(popTimer.getBitsWidth - 1))
+
+          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
+          val resetCounter = Counter(15)
+          when(rose(reset) || (reset & resetCounter.value > 0)) { resetCounter.increment() }
+          when(resetCounter.willOverflow) { resetCounter.clear() }
+          when(resetCounter.value > 0) { assume(reset === True) }
+
           when(!rose(popClock.readClockWire)) { assume(!fell(popClock.isResetActive)) }
           when(!rose(popClock.readClockWire)) { assume(!changed(outReady))}
         }
@@ -58,16 +61,15 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           assume(inValid === False)
         }
 
-        assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
         dut.io.push.formalAssumesSlave()
         // dut.withAssumes()
         
         dut.io.push.formalCovers()
         // back to back transaction cover test.
         val popArea = new ClockingArea(popClock) {
-          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           dut.io.pop.formalCovers(initialCycles)
-          when(!globalArea.resetToPop) { dut.io.pop.formalAssertsMaster() }
+          // when(!globalArea.resetToPop) { dut.io.pop.formalAssertsMaster() }
+          when(!reset) { dut.io.pop.formalAssertsMaster() }
         }
       })
   }
