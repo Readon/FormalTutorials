@@ -27,8 +27,6 @@ object GlobalClock {
     when(!target & timer.counter.value === 0) { timer.clear() }
     when(timer.counter.value > 0) { assume(target === True) }
   }
-
-  }
 }
 
 class FormalFifoCCTester extends SpinalFormalFunSuite {
