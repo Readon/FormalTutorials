@@ -5,11 +5,11 @@ import spinal.core.formal._
 import spinal.lib._
 import spinal.lib.formal._
 
-object GlobalClock {
-  val gclk = ClockDomain.internal("_global").withBootReset()
-  gclk.clock.addAttribute("gclk")
+case class GlobalClock() {
+  val domain = ClockDomain.internal("_global").withBootReset()
+  domain.clock.addAttribute("gclk")
 
-  def constraintClockDomain(domain: ClockDomain, period: Int, aligned: Boolean = false) = new ClockingArea(gclk) {
+  def constraintClockDomain(domain: ClockDomain, period: Int, aligned: Boolean = false) = new ClockingArea(domain) {
     val timer = CounterFreeRun(period)
     val phase = if (!aligned) timer.value + anyconst(cloneOf(timer.value)) else timer.value
     assume(domain.readClockWire === phase(timer.getBitsWidth - 1))
@@ -17,12 +17,12 @@ object GlobalClock {
     when(pastValid & !activeEdge) { assume(!fell(domain.isResetActive)) }
   }
 
-  def clockAlignIO(domain: ClockDomain, signal: Data) = new ClockingArea(gclk) {
+  def clockAlignIO(domain: ClockDomain, signal: Data) = new ClockingArea(domain) {
     val activeEdge = if (domain.config.clockEdge == RISING) rose(domain.readClockWire) else fell(domain.readClockWire)
     when(pastValid & !activeEdge) { assume(!changed(signal)) }
   }
 
-  def keepBoolLeastCycles(target: Bool, period: Int) = new ClockingArea(gclk) {
+  def keepBoolLeastCycles(target: Bool, period: Int) = new ClockingArea(domain) {
     val timer = Timeout(period)
     when(!target & timer.counter.value === 0) { timer.clear() }
     when(timer.counter.value > 0) { assume(target === True) }
@@ -30,16 +30,14 @@ object GlobalClock {
 }
 
 class FormalFifoCCTester extends SpinalFormalFunSuite {
-  test("fifo-verify all") {
+  def testMain(pushPeriod: Int, popPeriod: Int) = {
     val back2backCycles = 2
 
     val fifoDepth = 4
     val proveCycles = 8
     val coverCycles = 10
+    val maxPeriod = Math.max(pushPeriod, popPeriod)
 
-    val inClkPeriod = 5
-    val outClkPeriod = 17
-    val maxPeriod = Math.max(inClkPeriod, outClkPeriod)
     FormalConfig
       .withProve(maxPeriod * proveCycles)
       .withCover(maxPeriod * coverCycles)
@@ -54,17 +52,18 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
         val inValue = in(UInt(3 bits))
         val inValid = in(Bool())
         val outReady = in(Bool())
+        val gclk = GlobalClock()
 
-        GlobalClock.constraintClockDomain(pushClock, inClkPeriod)
-        GlobalClock.constraintClockDomain(popClock, outClkPeriod)
-        GlobalClock.keepBoolLeastCycles(reset, outClkPeriod)
+        gclk.constraintClockDomain(pushClock, pushPeriod)
+        gclk.constraintClockDomain(popClock, popPeriod)
+        gclk.keepBoolLeastCycles(reset, popPeriod)
 
         val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
-        GlobalClock.clockAlignIO(pushClock, dut.io.push.valid)
-        GlobalClock.clockAlignIO(pushClock, dut.io.push.payload)
-        GlobalClock.clockAlignIO(popClock, dut.io.pop.ready)
+        gclk.clockAlignIO(pushClock, dut.io.push.valid)
+        gclk.clockAlignIO(pushClock, dut.io.push.payload)
+        gclk.clockAlignIO(popClock, dut.io.pop.ready)
 
-        val checkArea = new ClockingArea(GlobalClock.gclk) {
+        val checkArea = new ClockingArea(gclk.domain) {
           when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
             .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
 
@@ -101,5 +100,21 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           }
         }
       })
+  }
+
+  test("fifo-verify fast pop") {
+    testMain(5, 3)
+  }
+
+  test("fifo-verify fast push") {
+    testMain(3, 5)
+  }
+
+  test("fifo-verify ultra fast pop") {
+    testMain(11, 2)
+  }
+
+  test("fifo-verify ultra fast push") {
+    testMain(2, 11)
   }
 }
