@@ -3,15 +3,28 @@
 {
 	"name": "formaltutorial",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "ghcr.io/readon/formaltutorials:docker",
+	"image": "ghcr.io/readon/formaltutorials:vscode",
 	"features": {},
 	"customizations": {
 		"vscode": {
 			"extensions": [
 				"scalameta.metals",
 				"mhutchie.git-graph",
-				"donjayamanne.githistory"
-			]
+				"donjayamanne.githistory",
+				"YuTengjing.open-in-external-app"
+			],
+			"settings": {
+				"openInExternalApp.openMapper": [
+					{
+						"extensionName": "vcd",
+						"apps": "gtkwave"
+					},					
+					{
+						"extensionName": "fst",
+						"apps": "gtkwave"
+					}
+				]
+			}
 		}
 	}
 	// Features to add to the dev container. More info: https://containers.dev/features.
