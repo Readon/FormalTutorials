@@ -246,11 +246,4 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
   // test("noloss ultra fast push reset seperately") {
   //   shouldFail(testNoLoss(2, 11, true))
   // }
-
-  override def shouldFail(body: => Unit) = assert(try {
-    body
-    false
-  } catch {
-    case e: Throwable => println(e); true
-  })
 }
