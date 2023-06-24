@@ -18,15 +18,15 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
       .withCover(coverCycles)
       .withAsync
       .withDebug
-      .doVerify(new Component {        
+      .doVerify(new Component {
         val pushClock = ClockDomain.current
         val reset = ClockDomain.current.isResetActive
         val popClock = ClockDomain.external("pop")
         val popReset = popClock.isResetActive
-        
-        val inValue = in (UInt(3 bits))
-        val inValid = in (Bool())
-        val outReady = in (Bool())
+
+        val inValue = in(UInt(3 bits))
+        val inValid = in(Bool())
+        val outReady = in(Bool())
         val globalClock = ClockDomain.internal("_global").withBootReset()
         globalClock.clock.addAttribute("gclk")
 
@@ -46,8 +46,8 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           when(resetCounter.willOverflow) { resetCounter.clear() }
           when(resetCounter.value > 0) { assume(reset === True) }
 
-          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue))}
-          when(!rose(popClock.readClockWire)) { assume(!changed(outReady))}
+          when(!rose(pushClock.readClockWire)) { assume(!changed(inValid)); assume(!changed(inValue)) }
+          when(!rose(popClock.readClockWire)) { assume(!changed(outReady)) }
         }
 
         val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
@@ -56,7 +56,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
           assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
           when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
-          .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
+            .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
           assert(dut.pushCC.pushPtr - fromGray(dut.pushCC.popPtrGray) <= fifoDepth)
           assert(fromGray(dut.popCC.pushPtrGray) - dut.popCC.popPtr <= fifoDepth)
         }
