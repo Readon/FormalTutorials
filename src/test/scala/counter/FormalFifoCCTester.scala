@@ -17,7 +17,11 @@ case class GlobalClock() {
     if (target.hasResetSignal) {
       assumeInitial(target.isResetActive)
       val activeEdge = if (target.config.clockEdge == RISING) rose(target.readClockWire) else fell(target.readClockWire)
-      when(pastValid & !activeEdge) { assume(!fell(target.isResetActive)) }
+      if(target.config.resetKind == SYNC){
+        when(pastValid & !activeEdge) { assume(!changed(target.isResetActive)) }
+      } else {
+        when(pastValid & !activeEdge) { assume(!fell(target.isResetActive)) }
+      }      
     }
   }
 
