@@ -22,6 +22,13 @@ object GlobalClock {
     when(pastValid & !activeEdge) { assume(!changed(signal)) }
   }
 
+  def keepBoolLeastCycles(target: Bool, period: Int) = new ClockingArea(gclk) {
+    val counter = Counter(period)
+    when(rose(target) || (target & counter.value > 0)) { counter.increment() }
+    when(counter.willOverflow) { counter.clear() }
+    when(counter.value > 0) { assume(target === True) }
+  }
+
   }
 }
 
@@ -50,13 +57,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
 
         GlobalClock.constraintClockDomain(pushClock, inClkPeriod)
         GlobalClock.constraintClockDomain(popClock, outClkPeriod)
-
-        val globalArea = new ClockingArea(GlobalClock.gclk) {
-          val resetCounter = Counter(outClkPeriod)
-          when(rose(reset) || (reset & resetCounter.value > 0)) { resetCounter.increment() }
-          when(resetCounter.willOverflow) { resetCounter.clear() }
-          when(resetCounter.value > 0) { assume(reset === True) }
-        }
+        GlobalClock.keepBoolLeastCycles(reset, outClkPeriod)
 
         val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
         GlobalClock.clockAlignIO(pushClock, dut.io.push.valid)
