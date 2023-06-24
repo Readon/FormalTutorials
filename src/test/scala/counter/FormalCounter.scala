@@ -48,7 +48,7 @@ class FormalCounterTester extends SpinalFormalFunSuite {
           // assert(!valueNotChange)
         }
 
-        when(pastValid && past(flow.valid) && past(flow.payload === data)) {
+        when(pastValidAfterReset && past(flow.valid) && past(flow.payload === data)) {
           assert(dut.value === data)
         }
 
