@@ -23,10 +23,9 @@ object GlobalClock {
   }
 
   def keepBoolLeastCycles(target: Bool, period: Int) = new ClockingArea(gclk) {
-    val counter = Counter(period)
-    when(rose(target) || (target & counter.value > 0)) { counter.increment() }
-    when(counter.willOverflow) { counter.clear() }
-    when(counter.value > 0) { assume(target === True) }
+    val timer = Timeout(period)
+    when(!target & timer.counter.value === 0) { timer.clear() }
+    when(timer.counter.value > 0) { assume(target === True) }
   }
 
   }
