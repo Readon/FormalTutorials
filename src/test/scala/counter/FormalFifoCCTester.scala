@@ -10,6 +10,7 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
     val initialCycles = 2
     val inOutDelay = 2
     val coverCycles = 50
+    val fifoDepth = 4
     FormalConfig
       .withProve(50)
       .withCover(coverCycles)
@@ -47,7 +48,14 @@ class FormalFifoCCTester extends SpinalFormalFunSuite {
           when(!rose(popClock.readClockWire)) { assume(!changed(outReady))}
         }
 
-        val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), 4, pushClock, popClock, false))
+        val dut = FormalDut(new StreamFifoCC(cloneOf(inValue), fifoDepth, pushClock, popClock))
+
+        val checkArea = new ClockingArea(globalClock) {
+          assert(dut.pushCC.pushPtrGray === toGray(dut.pushCC.pushPtr))
+          assert(dut.popCC.popPtrGray === toGray(dut.popCC.popPtr))
+          when(dut.io.push.ready) { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth - 1) }
+          .otherwise { assert(dut.pushCC.pushPtr - dut.popCC.popPtr <= fifoDepth) }
+        }
 
         assumeInitial(reset)
         assumeInitial(popReset)
